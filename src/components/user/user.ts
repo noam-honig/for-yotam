@@ -1,5 +1,7 @@
-import { Allow, Entity, Fields, Validators, remult } from 'remult'
+import { Allow, Entity, Fields, Relations, Validators, remult } from 'remult'
 import { Roles } from './roles'
+import { OrganizationPerson } from '../../shared/organizationPeople'
+import { EventParticipant } from '../../shared/event-participants'
 
 @Entity('users', {
   allowApiCrud: Roles.admin,
@@ -31,6 +33,11 @@ export class User {
 
   @Fields.createdAt()
   createdAt = new Date()
+
+  @Relations.toMany(() => OrganizationPerson, 'user')
+  organizations?: OrganizationPerson[]
+  @Relations.toMany(() => EventParticipant, 'user')
+  events?: EventParticipant[]
 }
 
 export const userRepo = remult.repo(User)

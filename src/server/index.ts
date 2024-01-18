@@ -1,7 +1,9 @@
 import express from 'express'
 import session from 'cookie-session'
-import { api } from './api'
+import { api, entities } from './api'
 import compression from 'compression'
+import { remult } from 'remult'
+import remultAdmin from 'remult-admin'
 
 export const app = express()
 app.use(
@@ -14,13 +16,17 @@ app.use(
 
 app.use(api)
 
-if (!process.env['VITE']) {
-  //app.use(helmet())
-  app.use(compression())
-  const frontendFiles = process.cwd() + '/dist'
-  app.use(express.static(frontendFiles))
-  app.get('/*', (_, res) => {
-    res.sendFile(frontendFiles + '/index.html')
-  })
-  app.listen(process.env['PORT'] || 3001, () => console.log('Server started'))
-}
+app.get('/api/admin/*', api.withRemult, (_, res) =>
+  remult.isAllowed('admin') || true
+    ? res.send(remultAdmin({ entities, baseUrl: '/api/admin' }))
+    : res.send(404)
+)
+
+//app.use(helmet())
+app.use(compression())
+const frontendFiles = process.cwd() + '/dist'
+app.use(express.static(frontendFiles))
+app.get('/*', (_, res) => {
+  res.sendFile(frontendFiles + '/index.html')
+})
+app.listen(process.env['PORT'] || 3002, () => console.log('Server started'))
